@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Search, Package, Truck, CheckCircle2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -38,16 +38,6 @@ const MatchingLoader = ({ onComplete, duration = 5000 }: MatchingLoaderProps) =>
   const [isComplete, setIsComplete] = useState(false);
 
   const stepDuration = duration / STEPS.length;
-
-  // Generate particles positions on mount (client-side only)
-  const particles = useMemo(() => {
-    return [...Array(20)].map((_, i) => ({
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      duration: `${3 + Math.random() * 4}s`,
-      delay: `${Math.random() * 2}s`,
-    }));
-  }, []);
 
   useEffect(() => {
     // Progress bar animation
@@ -89,15 +79,15 @@ const MatchingLoader = ({ onComplete, duration = 5000 }: MatchingLoaderProps) =>
 
         {/* Floating particles */}
         <div className="absolute inset-0">
-          {particles.map((particle, i) => (
+          {[...Array(20)].map((_, i) => (
             <div
               key={i}
-              className="absolute h-2 w-2 rounded-full bg-primary/20 animate-float"
+              className="absolute h-2 w-2 rounded-full bg-primary/20"
               style={{
-                left: particle.left,
-                top: particle.top,
-                animationDuration: particle.duration,
-                animationDelay: particle.delay,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animation: `float ${3 + Math.random() * 4}s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 2}s`,
               }}
             />
           ))}
@@ -207,6 +197,16 @@ const MatchingLoader = ({ onComplete, duration = 5000 }: MatchingLoaderProps) =>
           </p>
         </div>
       </div>
+
+      {/* CSS for floating animation */}
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0) translateX(0); opacity: 0.2; }
+          25% { transform: translateY(-20px) translateX(10px); opacity: 0.5; }
+          50% { transform: translateY(-10px) translateX(-10px); opacity: 0.3; }
+          75% { transform: translateY(-30px) translateX(5px); opacity: 0.4; }
+        }
+      `}</style>
     </div>
   );
 };

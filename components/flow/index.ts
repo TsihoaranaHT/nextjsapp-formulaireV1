@@ -17,4 +17,3 @@ export { default as CustomNeedForm } from './CustomNeedForm';
 export { default as ProductComparisonModal } from './ProductComparisonModal';
 export { default as ProductDetailModal } from './ProductDetailModal';
 export { default as MatchingLoader } from './MatchingLoader';
-export { default as QuickNeedInput } from './QuickNeedInput';
