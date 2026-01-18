@@ -24,10 +24,6 @@ export default function ProfileClient() {
     router.push('/questionnaire');
   };
 
-  const handleClose = () => {
-    router.push('/');
-  };
-
   if (showLoader) {
     return <MatchingLoader onComplete={handleLoaderComplete} duration={5000} />;
   }
@@ -36,7 +32,6 @@ export default function ProfileClient() {
     <ProfileTypeStep
       onComplete={handleComplete}
       onBack={handleBack}
-      onClose={handleClose}
     />
   );
 }

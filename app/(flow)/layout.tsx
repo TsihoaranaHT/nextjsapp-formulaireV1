@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import ExpertHelpBadge from '@/components/shared/ExpertHelpBadge';
 
 interface FlowLayoutProps {
   children: ReactNode;
@@ -12,9 +11,6 @@ export default function FlowLayout({ children }: FlowLayoutProps) {
       <main>
         {children}
       </main>
-
-      {/* Expert help badge - always visible */}
-      <ExpertHelpBadge />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, Info, Check, Package, Users } from "lucide-react";
@@ -17,7 +17,6 @@ interface QuestionScreenProps {
   onBack: () => void;
   isFirst: boolean;
   isLast: boolean;
-  matchingProductCount: number;
 }
 
 const QuestionScreen = ({
@@ -32,13 +31,12 @@ const QuestionScreen = ({
   onBack,
   isFirst,
   isLast,
-  matchingProductCount,
 }: QuestionScreenProps) => {
   const [showJustification, setShowJustification] = useState(false);
 
   const showOtherOption = question.id === 3;
   const isOtherSelected = selectedAnswers.includes("other");
-  const hasSelection = selectedAnswers.length > 0 && (!isOtherSelected || otherText.trim().length > 0);
+  const hasSelection = selectedAnswers.length > 0;
 
   const handleAnswerClick = (answerId: string) => {
     // For single select, auto-advance after selection - except for "other" which needs text input
@@ -50,7 +48,9 @@ const QuestionScreen = ({
     <div className="flex flex-col min-h-full">
       {/* Scrollable content */}
       <div className="flex-1 p-4 sm:p-6 lg:p-10 pb-32 sm:pb-6">
-        <div className="mx-auto max-w-2xl space-y-6 sm:space-y-8">
+        <div className="mx-auto max-w-[44em] space-y-6 sm:space-y-8">
+          {/* Question counter */}
+
           {/* Question counter */}
           <div className="text-center">
             <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5 text-sm font-medium text-secondary-foreground">
@@ -63,8 +63,8 @@ const QuestionScreen = ({
             <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground leading-tight">
               {question.title}
             </h2>
-
-            {/* Justification toggle - back to primary color */}
+            
+            {/* Justification toggle */}
             <button
               onClick={() => setShowJustification(!showJustification)}
               className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors"
@@ -73,6 +73,7 @@ const QuestionScreen = ({
               {showJustification ? "Masquer l'explication" : "Pourquoi cette question ?"}
             </button>
 
+            
             {showJustification && (
               <div className="rounded-lg bg-primary/5 border border-primary/20 p-4 text-sm text-muted-foreground text-left">
                 {question.justification}
@@ -82,56 +83,55 @@ const QuestionScreen = ({
 
           {/* Answer options */}
           <div className="space-y-3">
-            {question.answers.map((answer) => {
-              const isSelected = selectedAnswers.includes(answer.id);
 
-              return (
-                <button
-                  key={answer.id}
-                  onClick={() => handleAnswerClick(answer.id)}
-                  className={cn(
-                    "w-full text-left rounded-xl border-2 p-4 transition-all",
-                    "hover:border-primary/50 hover:bg-primary/5",
-                    isSelected
-                      ? "border-primary bg-primary/10"
-                      : "border-border bg-background"
-                  )}
-                >
-                  <div className="flex items-start gap-3">
-                    {/* Checkbox or Radio indicator */}
-                    <div
-                      className={cn(
-                        "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center transition-colors",
-                        question.multiSelect ? "rounded" : "rounded-full",
-                        isSelected
-                          ? "border-2 border-primary bg-primary"
-                          : "border-2 border-muted-foreground/30"
-                      )}
-                    >
-                      {isSelected && (
-                        question.multiSelect ? (
-                          <Check className="h-3 w-3 text-primary-foreground" />
-                        ) : (
-                          <div className="h-2 w-2 rounded-full bg-primary-foreground" />
-                        )
-                      )}
-                    </div>
+            {/* Regular answers (excluding quick option) */}
+            {question.answers
+              .filter((answer) => answer.id !== "1-quick")
+              .map((answer) => {
+                const isSelected = selectedAnswers.includes(answer.id);
 
-                    {/* Answer text */}
-                    <div className="flex-1">
-                      <span className="text-sm sm:text-base font-medium text-foreground">
-                        {answer.mainText}
-                      </span>
-                      {answer.secondaryText && (
-                        <span className="ml-1.5 sm:ml-2 text-xs sm:text-sm text-muted-foreground">
-                          — {answer.secondaryText}
+                return (
+                  <button
+                    key={answer.id}
+                    onClick={() => handleAnswerClick(answer.id)}
+                    className={cn(
+                      "w-full text-left rounded-xl border-2 p-4 transition-all",
+                      "hover:border-primary/50 hover:bg-primary/5",
+                      isSelected
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-background"
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* Checkbox or Radio indicator */}
+                      <div
+                        className={cn(
+                          "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center transition-colors",
+                          question.multiSelect ? "rounded" : "rounded-full",
+                          isSelected
+                            ? "border-2 border-primary bg-primary"
+                            : "border-2 border-muted-foreground/30"
+                        )}
+                      >
+                        {isSelected && (
+                          question.multiSelect ? (
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          ) : (
+                            <div className="h-2 w-2 rounded-full bg-primary-foreground" />
+                          )
+                        )}
+                      </div>
+                      
+                      {/* Answer text */}
+                      <div className="flex-1">
+                        <span className="text-sm sm:text-base text-foreground">
+                          {answer.mainText}
                         </span>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                </button>
-              );
-            })}
+                  </button>
+                );
+              })}
 
             {/* Other option - only for question 3 */}
             {showOtherOption && (
@@ -166,7 +166,7 @@ const QuestionScreen = ({
                         )
                       )}
                     </div>
-
+                    
                     {/* Answer text */}
                     <div className="flex-1">
                       <span className="text-sm sm:text-base font-medium text-foreground">
@@ -178,7 +178,7 @@ const QuestionScreen = ({
                     </div>
                   </div>
                 </button>
-
+                
                 {/* Text input when "Autre" is selected */}
                 {isOtherSelected && (
                   <div className="mt-3 pl-8">
@@ -196,6 +196,7 @@ const QuestionScreen = ({
               </div>
             )}
           </div>
+
 
           {/* Desktop navigation with reassurance - hidden on mobile */}
           <div className="hidden sm:block pt-4 space-y-3">
@@ -229,16 +230,19 @@ const QuestionScreen = ({
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>
-
+            
             {/* Desktop reassurance - below buttons */}
-            <div className="flex items-center justify-center gap-6 text-sm">
-              <div className="inline-flex items-center gap-2 text-primary">
-                <Package className="h-4 w-4" />
-                <span className="font-medium">{matchingProductCount} produits correspondent</span>
+            <div className="flex items-center justify-center gap-4 text-sm">
+              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5">
+                <Package className="h-4 w-4 text-primary" />
+                <span className="text-foreground">
+                  <span className="font-semibold text-primary">Ponts élévateurs</span>
+                  <span className="text-muted-foreground"> : 347 produits analysés • 24 fournisseurs</span>
+                </span>
               </div>
               <div className="inline-flex items-center gap-2 text-muted-foreground">
                 <Users className="h-4 w-4" />
-                <span>+ de 2 500 pros équipés ce mois-ci</span>
+                <span>+ de 10 000 pros équipés / mois</span>
               </div>
             </div>
           </div>
@@ -248,17 +252,18 @@ const QuestionScreen = ({
       {/* Mobile sticky footer with reassurance */}
       <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
         {/* Reassurance line */}
-        <div className="flex items-center justify-center gap-4 px-4 py-2 border-b border-border/50 bg-primary/5">
-          <div className="inline-flex items-center gap-1.5 text-xs text-primary font-medium">
-            <Package className="h-3.5 w-3.5" />
-            <span>{matchingProductCount} produits</span>
+        <div className="flex flex-col items-center gap-1.5 px-4 py-2 border-b border-border/50 bg-primary/5">
+          <div className="inline-flex items-center gap-1.5 text-xs">
+            <Package className="h-3.5 w-3.5 text-primary" />
+            <span className="font-semibold text-primary">Ponts élévateurs</span>
+            <span className="text-muted-foreground">: 347 produits analysés • 24 fournisseurs</span>
           </div>
           <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
             <Users className="h-3.5 w-3.5" />
-            <span>2 500+ pros équipés</span>
+            <span>+ de 10 000 pros équipés / mois</span>
           </div>
         </div>
-
+        
         {/* Navigation buttons */}
         <div className="flex items-center gap-3 p-4">
           <button

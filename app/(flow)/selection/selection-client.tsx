@@ -12,15 +12,10 @@ export default function SelectionClient() {
     router.push('/questionnaire');
   };
 
-  const handleClose = () => {
-    router.push('/');
-  };
-
   return (
     <SupplierSelectionModal
       userAnswers={userAnswers}
       onBackToQuestionnaire={handleBackToQuestionnaire}
-      onClose={handleClose}
     />
   );
 }

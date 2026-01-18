@@ -11,14 +11,9 @@ export default function QuestionnaireClient() {
     router.push('/profile');
   };
 
-  const handleClose = () => {
-    router.push('/');
-  };
-
   return (
     <NeedsQuestionnaire
       onComplete={handleComplete}
-      onClose={handleClose}
     />
   );
 }

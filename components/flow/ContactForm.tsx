@@ -1,15 +1,24 @@
 "use client";
 
-import { ArrowLeft, Send, Shield, Clock } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Send, Shield, Clock, CheckCircle, Paperclip, X } from "lucide-react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useLeadSubmission } from "@/hooks/api/useLeadSubmission";
 import { useFlowStore } from "@/lib/stores/flow-store";
 import type { Supplier, ContactFormData } from "@/types";
+import CountryCodeSelect from "./CountryCodeSelect";
 
 // Analytics imports
-import { trackContactFormView, trackFormSubmitAttempt } from "@/lib/analytics/gtm";
+import { trackContactFormView, trackFormSubmitAttempt, trackFormValidationErrors, identifyUser } from "@/lib/analytics";
+
+// Mock list of existing buyers in database
+const EXISTING_BUYERS = [
+  "jean.dupont@entreprise.fr",
+  "marie.martin@societe.com",
+  "contact@hellopro.fr",
+  "acheteur@garage-martin.fr",
+];
 
 interface ContactFormProps {
   selectedSuppliers: Supplier[];
@@ -26,16 +35,48 @@ const ContactForm = ({ selectedSuppliers, onBack }: ContactFormProps) => {
     firstName: "",
     lastName: "",
     company: profileData?.company?.name || profileData?.companyName || "",
+    countryCode: "+33",
     phone: "",
     message: "",
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof ContactFormData, string>>>({});
+  const [files, setFiles] = useState<File[]>([]);
 
   // Track form view on mount
   useState(() => {
     trackContactFormView(selectedSuppliers.length);
   });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      setFiles(prev => [...prev, ...newFiles]);
+      // Reset input to allow adding same file again if needed
+      e.target.value = '';
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Check if email is from an existing buyer
+  const isExistingBuyer = useMemo(() => {
+    if (!formData.email || formData.email.length < 5) return false;
+    return EXISTING_BUYERS.some(
+      (email) => email.toLowerCase() === formData.email.toLowerCase()
+    );
+  }, [formData.email]);
+
+  // Check if email is valid format
+  const isEmailValid = useMemo(() => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(formData.email);
+  }, [formData.email]);
+
+  // Show additional fields only if email is valid and not an existing buyer
+  const showAdditionalFields = isEmailValid && !isExistingBuyer;
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -61,13 +102,24 @@ const ContactForm = ({ selectedSuppliers, onBack }: ContactFormProps) => {
       newErrors.lastName = "Nom requis";
     }
     if (!formData.company.trim()) {
-      newErrors.company = "Société requise";
+      if (formData.company !== undefined && !formData.company.trim()) { newErrors.company = "Société requise"; };
     }
     if (!formData.phone.trim() || formData.phone.replace(/\D/g, "").length < 10) {
       newErrors.phone = "Téléphone invalide";
     }
 
     setErrors(newErrors);
+
+    // Track validation errors if any
+    if (Object.keys(newErrors).length > 0) {
+      const errorList = Object.entries(newErrors).map(([field, message]) => ({
+        field,
+        type: field === 'email' || field === 'phone' ? 'invalid_format' : 'required',
+        message: message || '',
+      }));
+      trackFormValidationErrors('contact_form', errorList);
+    }
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -80,6 +132,13 @@ const ContactForm = ({ selectedSuppliers, onBack }: ContactFormProps) => {
     trackFormSubmitAttempt(isValid, missingFields);
 
     if (!isValid) return;
+
+    // Identify user before submission
+    identifyUser(
+      formData.email,
+      profileData?.profileType || 'unknown',
+      formData.company || profileData?.company?.name
+    );
 
     // Submit lead
     leadSubmission.mutate({
@@ -119,21 +178,12 @@ const ContactForm = ({ selectedSuppliers, onBack }: ContactFormProps) => {
           </p>
           <div className="flex flex-wrap gap-2">
             {selectedSuppliers.map((supplier) => (
-              <div
+              <span
                 key={supplier.id}
-                className="flex items-center gap-2 rounded-full bg-card px-3 py-1.5 text-sm"
+                className="inline-flex items-center rounded-full bg-card border border-border px-3 py-1 text-sm font-medium text-foreground"
               >
-                <div className="h-5 w-5 rounded-full overflow-hidden bg-muted">
-                  <Image
-                    src={supplier.image}
-                    alt=""
-                    width={20}
-                    height={20}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <span className="font-medium">{supplier.supplierName}</span>
-              </div>
+                {supplier.supplierName}
+              </span>
             ))}
           </div>
         </div>
@@ -157,9 +207,86 @@ const ContactForm = ({ selectedSuppliers, onBack }: ContactFormProps) => {
               className={`w-full rounded-lg border ${errors.email ? 'border-destructive' : 'border-input'} bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`}
               placeholder="vous@entreprise.com"
             />
+            {isExistingBuyer && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
+                <CheckCircle className="h-4 w-4" />
+                <span>Nous vous avons reconnu ! Vos informations sont pré-enregistrées.</span>
+              </div>
+            )}
             {errors.email && <p className="mt-1 text-sm text-destructive">{errors.email}</p>}
           </div>
 
+          <div>
+            <label
+              htmlFor="message"
+              className="block text-sm font-medium text-foreground mb-1.5"
+            >
+              Précisions pour les fournisseurs{" "}
+              <span className="text-muted-foreground">(optionnel)</span>
+            </label>
+            <textarea
+              id="message"
+              name="message"
+              rows={3}
+              value={formData.message}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-input bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+              placeholder="Délais souhaités, contraintes techniques..."
+            />
+          </div>
+
+          {/* File upload */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">
+              Pièces jointes{" "}
+              <span className="text-muted-foreground">(optionnel)</span>
+            </label>
+
+            {/* List of added files */}
+            {files.length > 0 && (
+              <div className="mb-2 space-y-2">
+                {files.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between rounded-lg border border-input bg-secondary/50 px-3 py-2"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Paperclip className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span className="text-sm text-foreground truncate">{file.name}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(index)}
+                      className="shrink-0 ml-2 p-1 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                      aria-label="Supprimer le fichier"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add file button */}
+            <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-input bg-background px-4 py-4 text-muted-foreground hover:border-primary/50 hover:bg-secondary/50 transition-all">
+              <Paperclip className="h-5 w-5" />
+              <span className="text-sm">
+                {files.length > 0
+                  ? "Ajouter un autre document"
+                  : "Ajouter un document (cahier des charges, photo...)"}
+              </span>
+              <input
+                type="file"
+                className="hidden"
+                onChange={handleFileChange}
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                multiple
+              />
+            </label>
+          </div>
+
+          {showAdditionalFields && (
+          <>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label
@@ -201,61 +328,31 @@ const ContactForm = ({ selectedSuppliers, onBack }: ContactFormProps) => {
 
           <div>
             <label
-              htmlFor="company"
-              className="block text-sm font-medium text-foreground mb-1.5"
-            >
-              Société *
-            </label>
-            <input
-              type="text"
-              id="company"
-              name="company"
-              required
-              value={formData.company}
-              onChange={handleChange}
-              className={`w-full rounded-lg border ${errors.company ? 'border-destructive' : 'border-input'} bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`}
-            />
-            {errors.company && <p className="mt-1 text-sm text-destructive">{errors.company}</p>}
-          </div>
-
-          <div>
-            <label
               htmlFor="phone"
               className="block text-sm font-medium text-foreground mb-1.5"
             >
               Téléphone *
             </label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              required
-              value={formData.phone}
-              onChange={handleChange}
-              className={`w-full rounded-lg border ${errors.phone ? 'border-destructive' : 'border-input'} bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`}
-              placeholder="06 12 34 56 78"
-            />
+            <div className="flex gap-2">
+              <CountryCodeSelect
+                value={formData.countryCode || "+33"}
+                onChange={(value) => setFormData({ ...formData, countryCode: value })}
+              />
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                required
+                value={formData.phone}
+                onChange={handleChange}
+                className={`flex-1 rounded-lg border ${errors.phone ? 'border-destructive' : 'border-input'} bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`}
+                placeholder="6 12 34 56 78"
+              />
+            </div>
             {errors.phone && <p className="mt-1 text-sm text-destructive">{errors.phone}</p>}
           </div>
-
-          <div>
-            <label
-              htmlFor="message"
-              className="block text-sm font-medium text-foreground mb-1.5"
-            >
-              Précisions pour les fournisseurs{" "}
-              <span className="text-muted-foreground">(optionnel)</span>
-            </label>
-            <textarea
-              id="message"
-              name="message"
-              rows={3}
-              value={formData.message}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-input bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
-              placeholder="Délais souhaités, contraintes techniques..."
-            />
-          </div>
+          </>
+          )}
 
           {/* Reassurance */}
           <div className="flex flex-col gap-2 rounded-xl bg-secondary/50 p-4">

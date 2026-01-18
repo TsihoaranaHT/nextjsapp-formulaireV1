@@ -17,3 +17,8 @@ export { default as CustomNeedForm } from './CustomNeedForm';
 export { default as ProductComparisonModal } from './ProductComparisonModal';
 export { default as ProductDetailModal } from './ProductDetailModal';
 export { default as MatchingLoader } from './MatchingLoader';
+export { default as CountryCodeSelect } from './CountryCodeSelect';
+export { default as ContactFormSimple } from './ContactFormSimple';
+export { default as SearchResultChoice } from './SearchResultChoice';
+export { default as SelectionFeedback } from './SelectionFeedback';
+export { default as SomethingToAddForm } from './SomethingToAddForm';

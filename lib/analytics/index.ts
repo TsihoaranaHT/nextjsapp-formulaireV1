@@ -16,6 +16,17 @@ export {
   trackCompanySearch,
   trackSelectionPageView,
   trackContactFormView,
+  trackModifyCriteriaModalView,
+  trackCriteriaModified,
+  trackCustomNeedModalView,
+  trackComparisonModalView,
+  trackProductModalView,
+  identifyUser,
+  trackFunnelAbandonment,
+  trackFormValidationError,
+  trackFormValidationErrors,
+  trackDeviceInfo,
+  trackTrafficSource,
 } from './gtm';
 
 // GA4 exports

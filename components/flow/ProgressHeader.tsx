@@ -1,8 +1,9 @@
-"use client";
+'use client';
 
-import { Check, X } from "lucide-react";
+import { Check, X, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
+const hpLogo = "/images/hp-logo.svg";
+const expertPhoto = "/images/expert-patrick.jpg";
 
 interface Step {
   id: number;
@@ -13,20 +14,17 @@ interface ProgressHeaderProps {
   steps: Step[];
   currentStep: number;
   progress: number;
-  onClose?: () => void;
 }
 
-const ProgressHeader = ({ steps, currentStep, progress, onClose }: ProgressHeaderProps) => {
+const ProgressHeader = ({ steps, currentStep, progress }: ProgressHeaderProps) => {
   const currentStepData = steps.find(s => s.id === currentStep);
-
+  
   return (
     <div className="border-b border-border bg-card">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 sm:px-6 sm:py-4">
         {/* Logo */}
-        <div className="h-5 sm:h-8 shrink-0 flex items-center">
-          <span className="font-bold text-primary text-lg sm:text-xl">HelloPro</span>
-        </div>
+        <img src={hpLogo} alt="Hellopro" className="h-5 sm:h-8 shrink-0" />
 
         {/* Mobile: Current step indicator - simplified */}
         <div className="flex sm:hidden items-center gap-1.5">
@@ -75,14 +73,32 @@ const ProgressHeader = ({ steps, currentStep, progress, onClose }: ProgressHeade
           ))}
         </div>
 
-        {/* Close button - icon on mobile, text on desktop */}
-        <button
-          onClick={onClose}
-          className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+        {/* Expert help - desktop */}
+        <a
+          href="tel:+33123456789"
+          className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          <X className="h-5 w-5 sm:hidden" />
-          <span className="hidden sm:inline text-sm">Fermer</span>
-        </button>
+          <img
+            src={expertPhoto}
+            alt="Patrick Duval"
+            className="h-7 w-7 rounded-full object-cover ring-1 ring-border"
+          />
+          <span className="text-xs">Besoin d'aide ?</span>
+          <span className="font-medium text-foreground">01 23 45 67 89</span>
+        </a>
+
+        {/* Expert help - mobile (icon only) */}
+        <a
+          href="tel:+33123456789"
+          className="sm:hidden flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <img
+            src={expertPhoto}
+            alt="Patrick Duval"
+            className="h-6 w-6 rounded-full object-cover ring-1 ring-border"
+          />
+          <Phone className="h-4 w-4 text-primary" />
+        </a>
       </div>
 
       {/* Progress Bar */}

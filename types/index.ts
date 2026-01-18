@@ -91,7 +91,8 @@ export interface ContactFormData {
   email: string;
   firstName: string;
   lastName: string;
-  company: string;
+  company?: string;
+  countryCode?: string;
   phone: string;
   message: string;
 }
