@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { ChevronDown, ChevronUp, RotateCcw, ArrowLeft, Send, Search, LayoutGrid, List, ThumbsUp, ThumbsDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { useFlowStore } from "@/lib/stores/flow-store";
 import ProgressHeader from "./ProgressHeader";
 import CriteriaTags from "./CriteriaTags";
 import SupplierCard from "./SupplierCard";
@@ -511,9 +512,6 @@ interface SupplierSelectionModalProps {
 
 const SupplierSelectionModal = ({ userAnswers, onBackToQuestionnaire }: SupplierSelectionModalProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(
-    new Set(RECOMMENDED_SUPPLIERS.map((s) => s.id))
-  );
   const [animatingCount, setAnimatingCount] = useState(false);
   const [viewState, setViewState] = useState<ViewState>("selection");
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
@@ -522,6 +520,19 @@ const SupplierSelectionModal = ({ userAnswers, onBackToQuestionnaire }: Supplier
   const [criteriaModified, setCriteriaModified] = useState(false);
   const [showCriteriaChangedBanner, setShowCriteriaChangedBanner] = useState(false);
   const [mobileViewMode, setMobileViewMode] = useState<"grid" | "list">("list");
+
+  // Zustand store pour la sélection des fournisseurs
+  const { selectedSupplierIds, setSelectedSupplierIds } = useFlowStore();
+
+  // Convertir le tableau en Set pour les opérations
+  const selectedIds = useMemo(() => new Set(selectedSupplierIds), [selectedSupplierIds]);
+
+  // Initialiser avec les fournisseurs recommandés si vide
+  useEffect(() => {
+    if (selectedSupplierIds.length === 0) {
+      setSelectedSupplierIds(RECOMMENDED_SUPPLIERS.map((s) => s.id));
+    }
+  }, []);
 
   // Séparer les produits en fonction de leur sélection
   const selectedSuppliersList = useMemo(() => {
@@ -556,20 +567,15 @@ const SupplierSelectionModal = ({ userAnswers, onBackToQuestionnaire }: Supplier
   const selectedCount = selectedIds.size;
 
   const toggleSupplier = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
+    const newIds = selectedIds.has(id)
+      ? selectedSupplierIds.filter((sid) => sid !== id)
+      : [...selectedSupplierIds, id];
+    setSelectedSupplierIds(newIds);
     setAnimatingCount(true);
   };
 
   const resetSelection = () => {
-    setSelectedIds(new Set(RECOMMENDED_SUPPLIERS.map((s) => s.id)));
+    setSelectedSupplierIds(RECOMMENDED_SUPPLIERS.map((s) => s.id));
     setIsExpanded(false);
   };
 
@@ -652,7 +658,7 @@ const SupplierSelectionModal = ({ userAnswers, onBackToQuestionnaire }: Supplier
               {showCriteriaChangedBanner && (
                 <CriteriaChangedBanner
                   onNewSelection={() => {
-                    setSelectedIds(new Set());
+                    setSelectedSupplierIds([]);
                     setShowCriteriaChangedBanner(false);
                   }}
                   onDismiss={() => setShowCriteriaChangedBanner(false)}
