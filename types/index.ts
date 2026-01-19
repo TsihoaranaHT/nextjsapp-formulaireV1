@@ -30,6 +30,8 @@ export interface CompanyResult {
   siren: string;
   name: string;
   address: string;
+  postalCode?: string;
+  city?: string;
 }
 
 export interface ProfileData {

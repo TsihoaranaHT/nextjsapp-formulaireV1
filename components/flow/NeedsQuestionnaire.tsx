@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProgressHeader from "./ProgressHeader";
 import QuestionScreen from "./QuestionScreen";
 import { QUESTIONS } from "@/data/questions";
+import { useFlowStore } from "@/lib/stores/flow-store";
 
 interface NeedsQuestionnaireProps {
   onComplete: (answers: Record<number, string[]>) => void;
@@ -16,36 +17,42 @@ const STEPS = [
 ];
 
 const NeedsQuestionnaire = ({ onComplete }: NeedsQuestionnaireProps) => {
+  // Store Zustand pour persistance dans sessionStorage
+  const {
+    userAnswers,
+    otherTexts,
+    setAnswer,
+    setOtherText,
+    setStartTime,
+    startTime,
+  } = useFlowStore();
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, string[]>>({});
-  const [otherTexts, setOtherTexts] = useState<Record<number, string>>({});
+
+  // Initialiser le timestamp de début du funnel
+  useEffect(() => {
+    if (!startTime) {
+      setStartTime(Date.now());
+    }
+  }, [startTime, setStartTime]);
 
   const currentQuestion = QUESTIONS[currentQuestionIndex];
   const totalQuestions = QUESTIONS.length;
 
   const handleSelectAnswer = (answerId: string, autoAdvance?: boolean) => {
-    const currentAnswers = answers[currentQuestion.id] || [];
-    
+    const currentAnswers = userAnswers[currentQuestion.id] || [];
+
     if (currentQuestion.multiSelect) {
       // Toggle selection for multi-select
       if (currentAnswers.includes(answerId)) {
-        setAnswers((prev) => ({
-          ...prev,
-          [currentQuestion.id]: currentAnswers.filter((id) => id !== answerId),
-        }));
+        setAnswer(currentQuestion.id, currentAnswers.filter((id) => id !== answerId));
       } else {
-        setAnswers((prev) => ({
-          ...prev,
-          [currentQuestion.id]: [...currentAnswers, answerId],
-        }));
+        setAnswer(currentQuestion.id, [...currentAnswers, answerId]);
       }
     } else {
       // Single select - replace and auto-advance
-      setAnswers((prev) => ({
-        ...prev,
-        [currentQuestion.id]: [answerId],
-      }));
-      
+      setAnswer(currentQuestion.id, [answerId]);
+
       // Auto-advance after a short delay for visual feedback
       if (autoAdvance) {
         setTimeout(() => {
@@ -56,10 +63,7 @@ const NeedsQuestionnaire = ({ onComplete }: NeedsQuestionnaireProps) => {
   };
 
   const handleOtherTextChange = (text: string) => {
-    setOtherTexts((prev) => ({
-      ...prev,
-      [currentQuestion.id]: text,
-    }));
+    setOtherText(currentQuestion.id, text);
   };
 
   const handleNext = () => {
@@ -67,7 +71,7 @@ const NeedsQuestionnaire = ({ onComplete }: NeedsQuestionnaireProps) => {
       setCurrentQuestionIndex((prev) => prev + 1);
     } else {
       // All questions answered, proceed to selection
-      onComplete(answers);
+      onComplete(userAnswers);
     }
   };
 
@@ -93,7 +97,7 @@ const NeedsQuestionnaire = ({ onComplete }: NeedsQuestionnaireProps) => {
           question={currentQuestion}
           currentIndex={currentQuestionIndex}
           totalQuestions={totalQuestions}
-          selectedAnswers={answers[currentQuestion.id] || []}
+          selectedAnswers={userAnswers[currentQuestion.id] || []}
           otherText={otherTexts[currentQuestion.id] || ""}
           onSelectAnswer={handleSelectAnswer}
           onOtherTextChange={handleOtherTextChange}

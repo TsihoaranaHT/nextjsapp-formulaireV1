@@ -5,6 +5,9 @@ import { ArrowLeft, ArrowRight, Search, Building2, Sparkles, Globe, User, MapPin
 import { cn } from "@/lib/utils";
 import ProgressHeader from "./ProgressHeader";
 import { useSirenSearch } from "@/hooks/api";
+import { useFlowStore } from "@/lib/stores/flow-store";
+import type { ProfileType, CompanyResult, ProfileData } from "@/types";
+import type { SirenCompanyData } from "@/lib/api/services/siret.service";
 
 // Plus de MOCK_COMPANIES - utilisation de l'API réelle
 
@@ -101,25 +104,6 @@ const OTHER_COUNTRIES = [
 // Liste complète avec pays prioritaires en premier, séparateur, puis autres pays
 const COUNTRIES = [...PRIORITY_COUNTRIES, "---", ...OTHER_COUNTRIES];
 
-type ProfileType = "pro_france" | "creation" | "pro_foreign" | "particulier" | null;
-
-interface CompanyResult {
-  siren: string;
-  companyName: string;
-  address: string;
-  postalCode: string;
-  city: string;
-}
-
-interface ProfileData {
-  type: ProfileType;
-  company?: CompanyResult;
-  companyName?: string;
-  postalCode?: string;
-  city?: string;
-  country?: string;
-}
-
 interface ProfileTypeStepProps {
   onComplete: (data: ProfileData) => void;
   onBack: () => void;
@@ -132,6 +116,9 @@ const STEPS = [
 ];
 
 const ProfileTypeStep = ({ onComplete, onBack }: ProfileTypeStepProps) => {
+  // Store Zustand pour persistance dans sessionStorage
+  const { setProfileData } = useFlowStore();
+
   const [selectedType, setSelectedType] = useState<ProfileType>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCompany, setSelectedCompany] = useState<CompanyResult | null>(null);
@@ -171,7 +158,7 @@ const ProfileTypeStep = ({ onComplete, onBack }: ProfileTypeStepProps) => {
   }, [postalCode]);
 
   // Companies come from API (sirenResults)
-  const filteredCompanies = sirenResults || [];
+  const filteredCompanies: SirenCompanyData[] = sirenResults || [];
 
   // Filter countries based on search
   const filteredCountries = useMemo(() => {
@@ -202,9 +189,9 @@ const ProfileTypeStep = ({ onComplete, onBack }: ProfileTypeStepProps) => {
 
   const handleNext = () => {
     if (!isValid) return;
-    
+
     const data: ProfileData = { type: selectedType };
-    
+
     switch (selectedType) {
       case "pro_france":
         if (showManualCompanyForm) {
@@ -225,13 +212,24 @@ const ProfileTypeStep = ({ onComplete, onBack }: ProfileTypeStepProps) => {
         data.country = country;
         break;
     }
-    
+
+    // Persister dans le store Zustand (sessionStorage)
+    setProfileData(data);
+
     onComplete(data);
   };
 
-  const handleSelectCompany = (company: CompanyResult) => {
-    setSelectedCompany(company);
-    setSearchQuery(company.companyName);
+  const handleSelectCompany = (company: SirenCompanyData) => {
+    // Convertir SirenCompanyData en CompanyResult
+    const companyResult: CompanyResult = {
+      siren: company.siren,
+      name: company.name,
+      address: company.address,
+      postalCode: company.postalCode,
+      city: company.city,
+    };
+    setSelectedCompany(companyResult);
+    setSearchQuery(company.name);
   };
 
   return (
@@ -361,7 +359,7 @@ const ProfileTypeStep = ({ onComplete, onBack }: ProfileTypeStepProps) => {
                                       index !== filteredCompanies.length - 1 && "border-b border-border"
                                     )}
                                   >
-                                    <div className="font-medium text-foreground">{company.companyName}</div>
+                                    <div className="font-medium text-foreground">{company.name}</div>
                                     <div className="text-sm text-muted-foreground">
                                       SIREN : {company.siren} &nbsp;&nbsp; {company.address}, {company.postalCode} {company.city}
                                     </div>
@@ -464,7 +462,7 @@ const ProfileTypeStep = ({ onComplete, onBack }: ProfileTypeStepProps) => {
 
                       {selectedCompany && (
                         <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
-                          <div className="font-medium text-foreground">{selectedCompany.companyName}</div>
+                          <div className="font-medium text-foreground">{selectedCompany.name}</div>
                           <div className="text-sm text-muted-foreground">
                             SIREN : {selectedCompany.siren} &nbsp;&nbsp; {selectedCompany.address}, {selectedCompany.postalCode} {selectedCompany.city}
                           </div>

@@ -22,7 +22,7 @@ const getBaseUrl = () => {
 
 export interface SirenCompanyData {
   siren: string;
-  companyName: string;
+  name: string;
   address: string;
   postalCode: string;
   city: string;
@@ -66,7 +66,7 @@ function parseInseeV2Response(data: InseeV2Response): SirenCompanyData[] {
 
       companies.push({
         siren,
-        companyName: company.nomen,
+        name: company.nomen,
         address: company.adresse,
         postalCode: company.cp,
         city: company.ville,
@@ -158,7 +158,7 @@ export async function searchCompanyBySiren(
  */
 export interface SelectCompanyParams {
   siren: string;
-  companyName: string;
+  name: string;
   address: string;
   postalCode: string;
   city: string;
@@ -180,7 +180,7 @@ export async function selectCompany(
     return {
       data: {
         siren: params.siren,
-        companyName: params.companyName,
+        name: params.name,
         address: params.address,
         postalCode: params.postalCode,
         city: params.city,
