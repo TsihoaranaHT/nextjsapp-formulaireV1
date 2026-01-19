@@ -354,7 +354,7 @@ const ProfileTypeStep = ({ onComplete, onBack }: ProfileTypeStepProps) => {
                               {filteredCompanies.length > 0 ? (
                                 filteredCompanies.map((company, index) => (
                                   <button
-                                    key={company.siren}
+                                    key={`${company.siren}-${index}`}
                                     onClick={() => handleSelectCompany(company)}
                                     className={cn(
                                       "w-full text-left px-4 py-3 hover:bg-muted transition-colors",
