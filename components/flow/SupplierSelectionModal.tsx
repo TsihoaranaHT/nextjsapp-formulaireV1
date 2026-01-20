@@ -803,7 +803,7 @@ const SupplierSelectionModal = ({ userAnswers, onBackToQuestionnaire }: Supplier
                   trackComparisonModalView(selectedSupplierIds);
                   setShowComparison(true);
                 }}
-                className="flex-1 sm:flex-none h-11 rounded-lg border-2 border-muted-foreground/30 bg-muted/50 px-4 text-sm font-medium text-foreground hover:bg-muted hover:border-muted-foreground/50 transition-colors flex items-center justify-center gap-2"
+                className="hidden flex-1 sm:flex-none h-11 rounded-lg border-2 border-muted-foreground/30 bg-muted/50 px-4 text-sm font-medium text-foreground hover:bg-muted hover:border-muted-foreground/50 transition-colors flex items-center justify-center gap-2"
               >
                 <LayoutGrid className="h-4 w-4" />
                 Comparer
@@ -811,14 +811,14 @@ const SupplierSelectionModal = ({ userAnswers, onBackToQuestionnaire }: Supplier
               
               <button
                 onClick={() => setViewState("modify-criteria")}
-                className="flex-1 sm:flex-none h-11 rounded-lg border-2 border-muted-foreground/30 bg-muted/50 px-4 text-sm font-medium text-foreground hover:bg-muted hover:border-muted-foreground/50 transition-colors flex items-center justify-center"
+                className="hidden flex-1 sm:flex-none h-11 rounded-lg border-2 border-muted-foreground/30 bg-muted/50 px-4 text-sm font-medium text-foreground hover:bg-muted hover:border-muted-foreground/50 transition-colors flex items-center justify-center"
               >
                 Modifier critères
               </button>
               
               <button
                 onClick={() => setViewState("custom-need")}
-                className="flex-1 sm:flex-none h-11 rounded-lg border-2 border-muted-foreground/30 bg-muted/50 px-4 text-sm font-medium text-foreground hover:bg-muted hover:border-muted-foreground/50 transition-colors flex items-center justify-center"
+                className="hidden flex-1 sm:flex-none h-11 rounded-lg border-2 border-muted-foreground/30 bg-muted/50 px-4 text-sm font-medium text-foreground hover:bg-muted hover:border-muted-foreground/50 transition-colors flex items-center justify-center"
               >
                 Pas trouvé ce que vous cherchez ?
               </button>
