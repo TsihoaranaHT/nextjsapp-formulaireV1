@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { ProfileData, UserAnswers } from '@/types';
+import type { ContactFormData, ProfileData, UserAnswers } from '@/types';
 
 export interface FlowState {
   // État du questionnaire
@@ -9,6 +9,8 @@ export interface FlowState {
 
   // État du profil
   profileData: ProfileData | null;
+
+  contactData: ContactFormData | null;
 
   // État de la sélection
   selectedSupplierIds: string[];
@@ -22,6 +24,7 @@ export interface FlowState {
   setAnswer: (questionId: number, answerIds: string[]) => void;
   setOtherText: (questionId: number, text: string) => void;
   setProfileData: (data: ProfileData) => void;
+  setContactData: (data: ContactFormData) => void;
   setSelectedSupplierIds: (ids: string[]) => void;
   toggleSupplier: (supplierId: string) => void;
   setStartTime: (time: number) => void;
@@ -32,6 +35,7 @@ const initialState = {
   userAnswers: {},
   otherTexts: {},
   profileData: null,
+  contactData: null,
   selectedSupplierIds: [],
   startTime: null,
 };
@@ -62,6 +66,8 @@ export const useFlowStore = create<FlowState>()(
         })),
 
       setProfileData: (data) => set({ profileData: data }),
+
+      setContactData: (data) => set({ contactData: data }),
 
       setSelectedSupplierIds: (ids) => set({ selectedSupplierIds: ids }),
 
