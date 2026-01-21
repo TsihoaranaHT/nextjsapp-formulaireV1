@@ -6,8 +6,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.formData();
 
-    console.log("body ato anaty route.ts", body);
-
     let email = body.get('init[mail]');
 
     // Validation
@@ -32,8 +30,6 @@ export async function POST(request: NextRequest) {
         body: formData,
       }
     );
-    
-    console.log("RÉPONSE PHP ANATINY :", response);
 
     if (!response.ok) {
       return NextResponse.json(
