@@ -7,6 +7,9 @@ export interface FlowState {
   userAnswers: Record<number, string[]>;
   otherTexts: Record<number, string>;
 
+  // État du questionnaire dynamique
+  dynamicAnswers: Record<string, string[]>;
+
   // État du profil
   profileData: ProfileData | null;
 
@@ -23,6 +26,8 @@ export interface FlowState {
   setOtherTexts: (texts: Record<number, string>) => void;
   setAnswer: (questionId: number, answerIds: string[]) => void;
   setOtherText: (questionId: number, text: string) => void;
+  setDynamicAnswer: (questionCode: string, answerCodes: string[]) => void;
+  resetDynamicAnswers: () => void;
   setProfileData: (data: ProfileData) => void;
   setContactData: (data: ContactFormData) => void;
   setSelectedSupplierIds: (ids: string[]) => void;
@@ -34,6 +39,7 @@ export interface FlowState {
 const initialState = {
   userAnswers: {},
   otherTexts: {},
+  dynamicAnswers: {},
   profileData: null,
   contactData: null,
   selectedSupplierIds: [],
@@ -64,6 +70,16 @@ export const useFlowStore = create<FlowState>()(
             [questionId]: text,
           },
         })),
+
+      setDynamicAnswer: (questionCode, answerCodes) =>
+        set((state) => ({
+          dynamicAnswers: {
+            ...state.dynamicAnswers,
+            [questionCode]: answerCodes,
+          },
+        })),
+
+      resetDynamicAnswers: () => set({ dynamicAnswers: {} }),
 
       setProfileData: (data) => set({ profileData: data }),
 
